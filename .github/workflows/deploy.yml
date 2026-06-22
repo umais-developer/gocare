@@ -32,22 +32,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Copy dist to root
-        run: |
-          cp -r dist/* .
-          rm -rf dist
-
-      - name: Commit and push built files
-        run: |
-          git config user.email "github-actions@github.com"
-          git config user.name "GitHub Actions"
-          git add -A
-          git commit -m "Build: auto-deploy built files [skip ci]" || echo "No changes"
-          git push origin main
-
-      - name: Deploy custom domain CNAME
-        run: |
-          echo "gocare.rxintra.net" > CNAME
-          git add CNAME
-          git commit -m "Maintain CNAME for custom domain" || echo "CNAME unchanged"
-          git push origin main || echo "Push failed"
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
