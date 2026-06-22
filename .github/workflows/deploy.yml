@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build and Deploy
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - '.github/workflows/deploy.yml'
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -32,8 +32,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+      - name: Copy built files to root
+        run: |
+          cp dist/index.html index.html
+          cp dist/portfolio-styles.css portfolio-styles.css
+          rm -rf assets
+          cp -r dist/assets assets
+
+      - name: Commit and push built files
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add index.html portfolio-styles.css assets
+          git diff --cached --exit-code || git commit -m "Auto-deploy: built files [skip ci]"
+          git push origin main
