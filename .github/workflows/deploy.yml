@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.config.js'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   deploy:
@@ -26,9 +32,22 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          cname: gocare.rxintra.net
+      - name: Copy dist to root
+        run: |
+          cp -r dist/* .
+          rm -rf dist
+
+      - name: Commit and push built files
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add -A
+          git commit -m "Build: auto-deploy built files [skip ci]" || echo "No changes"
+          git push origin main
+
+      - name: Deploy custom domain CNAME
+        run: |
+          echo "gocare.rxintra.net" > CNAME
+          git add CNAME
+          git commit -m "Maintain CNAME for custom domain" || echo "CNAME unchanged"
+          git push origin main || echo "Push failed"
